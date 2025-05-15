@@ -31,7 +31,6 @@ function UserDashboard() {
         });
 
         const eventsData = res.data.events || [];
-
         const totalSpent = eventsData.reduce(
           (sum, event) => sum + (event.estimatedCost || 0),
           0
@@ -75,9 +74,12 @@ function UserDashboard() {
     formData.append("eventId", eventId);
 
     try {
+      const auth = getAuth();
+      const token = await auth.currentUser.getIdToken();
       const res = await axios.post(`${baseUrl}/event/uploadGuestList`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -93,9 +95,17 @@ function UserDashboard() {
 
   const handleSendInvitation = async (eventId) => {
     try {
-      const res = await axios.post(`${baseUrl}/event/sendInvitations`, {
-        eventId,
-      });
+      const auth = getAuth();
+      const token = await auth.currentUser.getIdToken();
+      const res = await axios.post(
+        `${baseUrl}/event/sendInvitations`,
+        { eventId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (res.data.success) {
         alert(`Invitations for event ${eventId} sent successfully!`);
@@ -148,13 +158,14 @@ function UserDashboard() {
         <p className="text-[#4A5759]/70">Loading your stats...</p>
       ) : (
         <>
+          {/* Stats */}
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {[ 
+            {[
               { label: "🎉 Total Events", value: userStats.totalEvents },
               { label: "💰 Total Spent", value: `₹${userStats.totalSpent}` },
               { label: "🏆 Top Vendor", value: userStats.topVendor },
@@ -178,6 +189,7 @@ function UserDashboard() {
             ➕ Add New Event
           </motion.button>
 
+          {/* Search */}
           <input
             type="text"
             placeholder="🔍 Search your events..."
@@ -186,7 +198,7 @@ function UserDashboard() {
             className="w-full p-4 rounded-xl border border-[#4A5759]/30 text-[#4A5759] bg-[#F7E1D7] placeholder-[#4A5759]/50 mb-8 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#EDAFB8]"
           />
 
-          {/* Event Cards */}
+          {/* Events */}
           <motion.div
             className="space-y-6 pb-20"
             initial={{ opacity: 0 }}
@@ -205,28 +217,43 @@ function UserDashboard() {
                   <p>🗓 <strong>Date:</strong> {new Date(event.startDate).toLocaleDateString()} – {new Date(event.endDate).toLocaleDateString()}</p>
                   <p>💸 <strong>Budget:</strong> ₹{event.estimatedCost}</p>
                 </div>
+
                 <p className="font-medium text-[#4A5759] mb-1">🛠 Services:</p>
-                <ul className="list-disc list-inside text-[#4A5759]/90 text-sm space-y-1">
+                <ul className="list-disc list-inside text-[#4A5759]/90 text-sm space-y-2">
                   {event.bookingRequests?.map((req) => (
-                    <li key={req._id} className="flex items-center justify-between">
+                    <li key={req._id} className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
-                        <span
-                          className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(req.status)}`}
-                        >
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(req.status)}`}>
                           {req.status || "Pending"}
                         </span>
                         <span>
-                          {req.serviceName || "Unknown Service"} —{" "}
-                          <span className="text-[#EDAFB8] font-semibold">
-                            {req.vendorName || "Unknown Vendor"}
-                          </span>
+                          {req.serviceName} — <span className="text-[#EDAFB8] font-semibold">{req.vendorName}</span>
                         </span>
                       </div>
+
+                      {req.status === "Accepted" && (
+                        <button
+                          className="text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition"
+                          onClick={() =>
+                            navigate("/Customer/payment", {
+                              state: {
+                                eventId: event.name,
+                                serviceName: req.serviceName,
+                                vendorName: req.vendorName,
+                                estimatedCost: req.estimatedCost,
+                                bookingId: req._id,
+                              },
+                            })
+                          }
+                        >
+                          💳 Proceed to Payment
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
 
-                {/* File Upload & Invitation Section */}
+                {/* Upload Guest List */}
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-[#4A5759] mb-1">
                     📎 Upload Guest List (PDF only)
@@ -241,11 +268,10 @@ function UserDashboard() {
                       }
                     }}
                     className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
-                             file:text-sm file:font-semibold
-                             file:bg-[#B0C4B1] file:text-[#4A5759]
-                             hover:file:bg-[#9eb2a1] transition"
+                               file:text-sm file:font-semibold
+                               file:bg-[#B0C4B1] file:text-[#4A5759]
+                               hover:file:bg-[#9eb2a1] transition"
                   />
-
                   {uploadedFiles[event._id] && (
                     <button
                       onClick={() => handleSendInvitation(event._id)}
@@ -254,7 +280,6 @@ function UserDashboard() {
                       📧 Send Invitations
                     </button>
                   )}
-
                   {sentInvites[event._id] && (
                     <div className="mt-2 text-green-700 font-semibold text-sm">
                       ✅ Invitations sent

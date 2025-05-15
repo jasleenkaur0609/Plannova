@@ -54,9 +54,7 @@ const makeVendorPayment = async (req, res) => {
 
 // Function to get pending vendor payments
 const getPendingVendorPayments = async (req, res) => {
-  console.log("Hello");
   try {
-    console.log("Hii");
     const db = await connectToDatabase();
     const pendingPayments = await db.collection("vendorPayments").find({ status: "pending" }).toArray();
     res.status(200).json({ success: true, data: pendingPayments });
@@ -66,7 +64,14 @@ const getPendingVendorPayments = async (req, res) => {
   }
 };
 
+// Alias or separate handler for Stripe/payment integration route
+const processVendorPayment = async (req, res) => {
+  // Currently reusing the same logic as makeVendorPayment
+  return makeVendorPayment(req, res);
+};
+
 module.exports = {
   makeVendorPayment,
   getPendingVendorPayments,
+  processVendorPayment, // ✅ Export added
 };

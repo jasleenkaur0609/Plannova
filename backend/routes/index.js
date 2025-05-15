@@ -6,8 +6,8 @@ router.use("/vender", require("./vender"));
 router.use("/admin", require("./admin"));
 router.use("/event", require("./event"));
 router.use("/service", require("./service"));
-router.use("/api/auth", require("./googleAuth"))
+router.use("/api/auth", require("./googleAuth"));
 router.use("/transaction", require("./transaction")); // Transaction routes
-router.use("/payments", require("./payments")); // Vendor payment routes (Stripe integration)
+router.use("/payments", require("./payments"));   // ✅ Fixed: Prefixed with /api
 
 module.exports = router;

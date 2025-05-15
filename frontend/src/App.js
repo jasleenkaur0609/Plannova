@@ -27,6 +27,8 @@ import UserDashboard from './components/Customer/UserDashboard'
 import AddEvent from './components/Customer/AddEvent'
 import SelectServices from './components/Customer/SelectServices'
 import EventPreview from './components/Customer/EventPreview'
+import PaymentPage from "./components/Customer/PaymentPage";
+
 
 import PublicRoute from './components/PublicRoute'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -75,6 +77,7 @@ function App() {
           <Route path="/customer/add-event" element={<AddEvent />} />
           <Route path="/customer/select-services" element={<SelectServices />} />
           <Route path="/customer/event-preview" element={<EventPreview />} />
+          <Route path="/customer/payment" element={<PaymentPage />} />
         </Route>
 
       </Routes>
